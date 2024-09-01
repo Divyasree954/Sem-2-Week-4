@@ -1,0 +1,100 @@
+CREATE TABLE Rooms (
+    room_id INT PRIMARY KEY,
+    room_type VARCHAR(50),
+    price_per_night DECIMAL(10, 2),
+    availability BOOLEAN
+);
+
+CREATE TABLE Guests (
+    guest_id INT PRIMARY KEY,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100),
+    phone_number VARCHAR(15)
+);
+
+CREATE TABLE Reservations (
+    reservation_id INT PRIMARY KEY,
+    guest_id INT,
+    room_id INT,
+    check_in DATE,
+    check_out DATE,
+    status VARCHAR(20),
+    FOREIGN KEY (guest_id) REFERENCES Guests(guest_id),
+    FOREIGN KEY (room_id) REFERENCES Rooms(room_id)
+);
+
+CREATE TABLE Payments (
+    payment_id INT PRIMARY KEY,
+    reservation_id INT,
+    amount DECIMAL(10, 2),
+    payment_date DATE,
+    payment_method VARCHAR(50),
+    FOREIGN KEY (reservation_id) REFERENCES Reservations(reservation_id)
+);
+INSERT INTO Rooms (room_id, room_type, price_per_night, availability) VALUES
+(1, 'Single', 100.00, TRUE),
+(2, 'Double', 150.00, TRUE),
+
+INSERT INTO Guests (guest_id, first_name, last_name, email, phone_number) VALUES
+(1, 'divya', 'J', 'divya@example.com', '1234567890'),
+(2, 'divya sree', 'R', 'divyasree@example.com', '0987654321');
+
+INSERT INTO Reservations (reservation_id, guest_id, room_id, check_in, check_out, status) VALUES
+(1, 1, 2, '2024-09-01', '2024-09-05', 'Booked'),
+(2, 2, 3, '2024-09-10', '2024-09-12', 'Booked');
+
+
+
+SELECT * 
+FROM Rooms 
+WHERE availability = TRUE 
+AND room_id NOT IN (
+    SELECT room_id 
+    FROM Reservations 
+    WHERE (check_in <= '2024-09-04' AND check_out >= '2024-09-01')
+);
+
+
+
+UPDATE Rooms
+SET availability = FALSE
+WHERE room_id = 1;
+
+
+
+DELETE FROM Reservations 
+WHERE status = 'Canceled';
+
+
+
+SELECT r.*
+FROM Reservations r
+JOIN Guests g ON r.guest_id = g.guest_id
+WHERE g.first_name = 'divya' OR r.check_in = '2024-09-01';
+
+
+
+SELECT * 
+FROM Rooms 
+WHERE (room_type = 'Double' AND price_per_night BETWEEN 100 AND 200)
+   OR (room_type = 'Singlee' AND price_per_night < 110);
+
+
+
+SELECT g.*, r.room_id
+FROM Guests g
+JOIN Reservations r ON g.guest_id = r.guest_i
+ORDER BY r.check_in ASC, r.room_id ASC;
+
+
+SELECT COUNT(*) AS total_reservations
+FROM Reservations;
+
+
+
+SELECT r.room_type, SUM(p.amount) AS total_revenue
+FROM Rooms r
+JOIN Reservations res ON r.room_id = res.room_id
+JOIN Payments p ON res.reservation_id = p.reservation_id
+GROUP BY r.room_type;
